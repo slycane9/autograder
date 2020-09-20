@@ -27,7 +27,7 @@ Set the url to https://smee.io/beguEj0YpuDKLg5x, and make sure the content type 
 ## JenkinsFile
 The final step of your setup will be adding a JenkinsFile to your repos root directory.  Copy the file contained in this repo for lab 1 and make sure it is named "JenkinsFile" in your repo.
 
-Edit your file so that your email address you want your results to be sent to are in the sections labeled <put your email address here>.
+Edit your file so that your email address you want your results to be sent to are in the sections labeled "put your email address here".
 
 **For the grader to work, your newsapp directory (the one that contains your manage.py file) should be accesible from your repo's root directory (Just like my JenkinsFiles directory is accesible in this repos root directory)**
 
