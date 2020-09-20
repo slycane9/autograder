@@ -5,7 +5,9 @@ This guide will detail how to set up your github repo for the autograder written
 I need the following message from you, please send it to my canvas email.
 
 ssh private key: abcd123
+
 git repo: git@github.com:username/repo.git
+
 name: John Smith
 
 ## How to generate the ssh private key
