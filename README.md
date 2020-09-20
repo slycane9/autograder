@@ -1,8 +1,8 @@
 # Autograder Steup Instructions
-This guide will detail how to set up your github repo for the autograder written by Serdjan Rolovic your TA.
+This guide will detail how to set up your github repo for the autograder.
 
 ## What I Need
-I need the following message from you, please send it to my canvas email.
+I need the following message from you, please send it to my (Serdjan Rolovic) canvas email.
 
 ssh private key: abcd123
 
