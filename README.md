@@ -1,5 +1,5 @@
 # Autograder Steup Instructions
-This guide will detail how to set up your github repo for the autograder.
+This guide will detail how to set up your github repo for the autograder.  You will not need to invite me to your github repo for the grader to work properly.
 
 ## What I Need
 I need the following message from you, please send it to my (Serdjan Rolovic) canvas email.
