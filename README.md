@@ -19,6 +19,8 @@ This will generate you two files, id_rsa and id_rsa.pub, send me the private key
 
 Then go to your github repo and access settings>deploykeys.  Add a key and put in the id_rsa.pub contents as key value.
 
+**When you send me your private key please include the entire contents (including the header and footer)**
+
 ## Github Webhooks
 For the autograder to detect your git push, go to your github repo's settings>webhooks page and add a webhook.
 
