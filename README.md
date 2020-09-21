@@ -1,15 +1,8 @@
 # Autograder Steup Instructions
 This guide will detail how to set up your github repo for the autograder.  You will not need to invite me to your github repo for the grader to work properly.
 
-## What I Need
-I need the following message from you, please send it to my (Serdjan Rolovic) canvas email, also make sure to send me an invitation for your.
-
-git repo: git@github.com:username/repo.git
-
-name: John Smith
-
 ## Github Webhooks
-**For some reason you need to do this step after I've already set up your pipeline, so wait for me to respond to your email message above before creating the webhook.**
+**Do not do this step at the moment.  I will message on slack when I have everyone's grader set up, then do this step.**
 
 For the autograder to detect your git push, go to your github repo's settings>webhooks page and add a webhook.
 
