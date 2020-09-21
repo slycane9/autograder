@@ -22,6 +22,8 @@ Then go to your github repo and access settings>deploykeys.  Add a key and put i
 **When you send me your private key please include the entire contents (including the header and footer)**
 
 ## Github Webhooks
+**For some reason you need to do this step after I've already set up your pipeline, so wait for me to respond to your email message above before creating the webhook.**
+
 For the autograder to detect your git push, go to your github repo's settings>webhooks page and add a webhook.
 
 Set the url to https://smee.io/beguEj0YpuDKLg5x, and make sure the content type is application/json.  At the bottom make sure to check the button saying "Send me everything".
