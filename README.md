@@ -2,25 +2,11 @@
 This guide will detail how to set up your github repo for the autograder.  You will not need to invite me to your github repo for the grader to work properly.
 
 ## What I Need
-I need the following message from you, please send it to my (Serdjan Rolovic) canvas email.
+I need the following message from you, please send it to my (Serdjan Rolovic) canvas email, also make sure to send me an invitation for your.
 
 git repo: git@github.com:username/repo.git
 
-ssh private key: abcd123
-
-
 name: John Smith
-
-## How to generate the ssh private key
-Go to any linux terminal and run
-```
-ssh-keygen
-```
-This will generate you two files, id_rsa and id_rsa.pub, send me the private key (id_rsa) in your message to me.
-
-Then go to your github repo and access settings>deploykeys.  Add a key and put in the id_rsa.pub contents as key value.
-
-**When you send me your private key please include the entire contents (including the header and footer)**
 
 ## Github Webhooks
 **For some reason you need to do this step after I've already set up your pipeline, so wait for me to respond to your email message above before creating the webhook.**
