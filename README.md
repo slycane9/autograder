@@ -4,9 +4,10 @@ This guide will detail how to set up your github repo for the autograder.  You w
 ## What I Need
 I need the following message from you, please send it to my (Serdjan Rolovic) canvas email.
 
+git repo: git@github.com:username/repo.git
+
 ssh private key: abcd123
 
-git repo: git@github.com:username/repo.git
 
 name: John Smith
 
