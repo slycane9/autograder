@@ -46,7 +46,7 @@ class ViewsTestCase(TestCase):
         data = {'create_news': 'news', 'new_news_query': 'new', 'new_news_sources': 'source', 'new_news_secrecy': 5}
         request_post_create = RequestFactory().post('/', data)
         
-        data = {'update_update': 'news', 'update_news_query': 'new', 'update_news_sources': 'source', 'update_news_secrecy': 5, 'update_news_select' : 'new'}
+        data = {'update_update': 'news', 'update_news_query': 'new', 'update_news_sources': 'source', 'update_news_secrecy': 5, 'update_news_select' : NewsListing.objects.get(queryId="abc").id}
         request_post_update = RequestFactory().post('/', data)
         
         
@@ -77,7 +77,7 @@ class ViewsTestCase(TestCase):
         self.assertTrue(str(render.content).count("abc") == 2)
         self.assertTrue(str(render.content).count("bcd") == 1)
         self.assertTrue(str(render.content).count("cde") == 1)
-        
+        '''
         
         #test bigshot update
         request_post_update.user = bigshot
@@ -86,7 +86,7 @@ class ViewsTestCase(TestCase):
         self.assertTrue(str(render.content).count("abc") == 2)
         self.assertTrue(str(render.content).count("bcd") == 1)
         self.assertTrue(str(render.content).count("cde") == 1)
-        '''
+        
         #test rookie get
         request_get.user = rookie
         render = user_account(request_get)
