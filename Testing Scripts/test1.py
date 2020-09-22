@@ -70,6 +70,7 @@ class CrackerTestCase(TestCase):
             hash = "pbkdf2_sha256$1${}${}".format(salt, base64.b64encode(key_hash).decode())
             cursor.execute("INSERT INTO auth_user VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 (i, hash, "2020-08-01 16:00:00.0", 0, "user"+str(i), '', '', 0, 1, "2020-08-01 15:00:00.0", ''))
+        db.commit()
         os.chdir(self.TEST_PATH)
             
     def test_db_cracking(self):
@@ -88,7 +89,7 @@ class CrackerTestCase(TestCase):
             pw = pw.strip()
             self.assertTrue("user" in user)
             user_number = int(user.replace("user",""))
-            self.assertTrue(user_number > 0 and user_number < len(sefl.passwords_permutation))
+            self.assertTrue(user_number >= 0 and user_number < len(self.passwords_permutation))
             self.assertEqual(pw, self.passwords_permutation[user_number])
             passwords_found.append(pw)
         self.assertEqual(len(passwords_found), len(self.passwords_permutation))
