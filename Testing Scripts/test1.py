@@ -59,7 +59,7 @@ class CrackerTestCase(TestCase):
         random.shuffle(self.passwords_permutation)
         for i in range(len(self.PASSWORDS)):
             pw = self.passwords_permutation[i]
-            salt = os.urandom(16)
+            salt = random_word(string.ascii_letters+string.digits, 12)
             kdf = PBKDF2HMAC(
                     algorithm=hashes.SHA256(),
                     length=16,
@@ -67,7 +67,7 @@ class CrackerTestCase(TestCase):
                     iterations=1,
                     )
             key_hash = kdf.derive(pw.encode())
-            hash = "pbkdf2_sha256$1${}${}".format(base64.b64encode(salt), base64.b64encode(key_hash))
+            hash = "pbkdf2_sha256$1${}${}".format(salt, base64.b64encode(key_hash).decode())
             cursor.execute("INSERT INTO auth_user VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 (i, hash, "2020-08-01 16:00:00.0", 0, "user"+str(i), '', '', 0, 1, "2020-08-01 15:00:00.0", ''))
         os.chdir(self.TEST_PATH)
@@ -104,7 +104,7 @@ class CrackerTestCase(TestCase):
         
         pws = {pw1:True, pw2: True, pw3: False}
         for pw, should_pass in pws.items():
-            salt = os.urandom(16)
+            salt = random_word(string.ascii_letters+string.digits, 12)
             kdf = PBKDF2HMAC(
                 algorithm=hashes.SHA256(),
                 length=16,
@@ -112,7 +112,7 @@ class CrackerTestCase(TestCase):
                 iterations=1,
                 )
             key_hash = kdf.derive(pw.encode())
-            hash = "pbkdf2_sha256$1${}${}".format(base64.b64encode(salt), base64.b64encode(key_hash))
+            hash = "pbkdf2_sha256$1${}${}".format(salt, base64.b64encode(key_hash).decode()
             output = subprocess.check_output("python3 cracker.py {}".format(hash), shell=True)
             output = output.decode()
             output = output.lower()
