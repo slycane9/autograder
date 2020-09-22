@@ -3,12 +3,143 @@ from newslister.models import NewsListing
 from newslister.models import UserXtraAuth
 from newslister.views import NewsApiManager, user_account
 from django.core.exceptions import ValidationError
-import sys 
+import sys, os, base64, subprocess, random, sqlite3, string
+
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC 
+from cryptography.hazmat.backends import default_backend
+backend = default_backend()
     
 #sys.stdout = open('result.txt','w')
 #print('If a testing header is not followed by a pass statement that test failed')
 
 
+class CrackerTestCase(TestCase):
+    TEST_PATH = "_autograder_cracker_test_"
+    PASSWORDS = [
+        "123456",
+        "123456789",
+        "qwerty",
+        "password",
+        "1234567",
+        "12345678",
+        "12345",
+        "iloveyou",
+        "111111",
+        "123123",
+        "abc123",
+        "qwerty123",
+        "1q2w3e4r",
+        "admin",
+        "qwertyuiop",
+        "654321",
+        "555555",
+        "lovely",
+        "7777777",
+        "welcome",
+        "888888",
+        "princess",
+        "dragon",
+        "password1",
+        "123qwe"]
+
+    def setUp(self):
+        if not os.path.exists(self.TEST_PATH):
+            os.mkdir("_autograder_cracker_test_")
+        if os.path.exists("cracker.py"):
+            os.system("cp cracker.py {}".format(self.TEST_PATH))
+        if os.path.exists("db.sqlite3"):
+            os.system("cp db.sqlite3 {}".format(self.TEST_PATH))
+        db = sqlite3.connect("{}/db.sqlite3".format(self.TEST_PATH))
+        cursor = db.cursor()
+        cursor.execute("DELETE FROM auth_user")
+        self.passwords_permutation = self.PASSWORDS[:]
+        random.shuffle(self.passwords_permutation)
+        for i in range(len(self.PASSWORDS)):
+            pw = self.passwords_permutation[i]
+            salt = os.urandom(16)
+            kdf = PBKDF2HMAC(
+                    algorithm=hashes.SHA256(),
+                    length=16,
+                    salt=salt,
+                    iterations=1,
+                    )
+            key_hash = kdf.derive(pw.encode())
+            hash = "pbkdf2_sha256$1${}${}".format(base64.b64encode(salt), base64.b64encode(key_hash))
+            cursor.execute("INSERT INTO auth_user VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (i, hash, "2020-08-01 16:00:00.0", 0, "user"+str(i), '', '', 0, 1, "2020-08-01 15:00:00.0", ''))
+        os.chdir(self.TEST_PATH)
+        self.all_passed=True
+            
+    def test_db_cracking(self):
+        print("Testing the cracker.py on db")
+        try:
+            self.assertTrue(os.path.exists("cracker.py"))
+            self.assertTrue(os.path.exists("db.sqlite3"))
+            output = subprocess.check_output("python3 cracker.py", shell=True)
+            output = output.decode()
+            passwords_found = []
+            for line in output.split("\n"):
+                line = line.strip()
+                if not line: continue
+                if line.count(",") != 1: continue
+                user, pw = line.split(",")
+                user = user.strip()
+                pw = pw.strip()
+                self.assertTrue("user" in user)
+                user_number = int(user.replace("user",""))
+                self.assertTrue(user_number > 0 and user_number < len(sefl.passwords_permutation))
+                self.assertEqual(pw, self.passwords_permutation[user_number])
+                passwords_found.append(pw)
+            self.assertEqual(len(passwords_found), len(self.passwords_permutation))
+            print("Cracker.py db test passed")
+        except AssertionError:
+            print("Cracker db test failed.")
+            self.all_passed = False
+            
+    def test_db_cmdline(self):
+        print("Testing the cracker.py commandline brute force test")
+        print("cwd", os.getcwd())
+        try:
+            pw1 = "".join([random.choice(string.ascii_lowercase) for i in range(random.randint(2,4))])
+            pw2 = "".join([random.choice(string.ascii_lowercase) for i in range(random.randint(2,4))])
+            pw3 = "".join([random.choice(string.ascii_lowercase) for i in range(6)])
+            self.assertTrue(os.path.exists("cracker.py"))
+            self.assertTrue(os.path.exists("db.sqlite3"))
+            
+            pws = {pw1:True, pw2: True, pw3: False}
+            for pw, should_pass in pws.items():
+                salt = os.urandom(16)
+                kdf = PBKDF2HMAC(
+                    algorithm=hashes.SHA256(),
+                    length=16,
+                    salt=salt,
+                    iterations=1,
+                    )
+                key_hash = kdf.derive(pw.encode())
+                hash = "pbkdf2_sha256$1${}${}".format(base64.b64encode(salt), base64.b64encode(key_hash))
+                output = subprocess.check_output("python3 cracker.py {}".format(hash), shell=True)
+                output = output.decode()
+                output = output.lower()
+                if "password not cracked" in output:
+                    passed = False
+                if "password cracked" in output:
+                    passed = True
+                    self.assertTrue(output.count(":") == 1)
+                    password = output.split(":")[1].strip()
+                    self.assertTrue(password == pw or password[1:-1] == pw)
+                self.assertEqual(should_pass, passed)
+            print("Cracker cmdline test passed.")
+        except AssertionError:
+            print("Cracker cmdline test failed.")
+            self.all_passed = False
+            
+    def tearDown(self):
+        if self.TEST_PATH in os.getcwd():
+            os.chdir("..")
+        if os.path.exists(self.TEST_PATH):
+            os.system("rm -rf {}".format(self.TEST_PATH))
+            
 
 class ViewsTestCase(TestCase):
     def setUp(self):
