@@ -13,6 +13,8 @@ backend = default_backend()
 #sys.stdout = open('result.txt','w')
 #print('If a testing header is not followed by a pass statement that test failed')
 
+def random_word(charset, word_len):
+    return "".join([random.choice(charset) for i in range(word_len)])
 
 class CrackerTestCase(TestCase):
     TEST_PATH = "_autograder_cracker_test_"
@@ -101,9 +103,9 @@ class CrackerTestCase(TestCase):
         print("Testing the cracker.py commandline brute force test")
         print("cwd", os.getcwd())
         try:
-            pw1 = "".join([random.choice(string.ascii_lowercase) for i in range(random.randint(2,4))])
-            pw2 = "".join([random.choice(string.ascii_lowercase) for i in range(random.randint(2,4))])
-            pw3 = "".join([random.choice(string.ascii_lowercase) for i in range(6)])
+            pw1 = random_word(string.ascii_lowercase, random.randint(2,4))
+            pw2 = random_word(string.ascii_lowercase, random.randint(2,4))
+            pw3 = random_word(string.ascii_lowercase, 6)
             self.assertTrue(os.path.exists("cracker.py"))
             self.assertTrue(os.path.exists("db.sqlite3"))
             
@@ -273,56 +275,111 @@ class ViewsTestCase(TestCase):
         rookie = UserXtraAuth.objects.get(username="rookie")
         bigshot = UserXtraAuth.objects.get(username="bigshot")
         
-        #set up requests        
-        data = {'create_news': 'news', 'new_news_query': 'new', 'new_news_sources': 'source', 'new_news_secrecy': 3}
+        #set up requests
+        # create a unique source that can be used to search the db
+        create_source_key = random_word(string.ascii_lowercase, 10)
+        data = {'create_news': 'news', 'new_news_query': 'new', 'new_news_sources': create_source_key, 'new_news_secrecy': 3}
         request_post_create = RequestFactory().post('/', data)
         
-        data = {'update_update': 'news', 'update_news_query': 'new', 'update_news_sources': 'source', 'update_news_secrecy': 3, 'update_news_select' : NewsListing.objects.get(queryId="bcd").id}
-        request_post_update = RequestFactory().post('/', data)
+        update_source_key_3 = random_word(string.ascii_lowercase, 10)
+        data = {'update_update': 'news', 'update_news_query': 'new', 'update_news_sources': update_source_key_3, 'update_news_secrecy': 3, 'update_news_select' : NewsListing.objects.get(queryId="bcd").id}
+        request_post_update_3 = RequestFactory().post('/', data)
         
-        data = {'update_update': 'news', 'update_news_query': 'new', 'update_news_sources': 'source', 'update_news_secrecy': 1, 'update_news_select' : NewsListing.objects.get(queryId="abc").id}
-        request_post_update2 = RequestFactory().post('/', data)
+        update_source_key_5 = random_word(string.ascii_lowercase, 10)
+        data = {'update_update': 'news', 'update_news_query': 'new', 'update_news_sources': update_source_key_5, 'update_news_secrecy': 5, 'update_news_select' : NewsListing.objects.get(queryId="abc").id}
+        request_post_update_5 = RequestFactory().post('/', data)
+        
+        update_source_key_5_to_3 = random_word(string.ascii_lowercase, 10)
+        data = {'update_update': 'news', 'update_news_query': 'new', 'update_news_sources': update_source_key_5_to_3, 'update_news_secrecy': 3, 'update_news_select' : NewsListing.objects.get(queryId="abc").id}
+        request_post_update_5_to_3 = RequestFactory().post('/', data)
         
         
         data = {'update_delete': 'news', 'update_news_select': NewsListing.objects.get(queryId="bcd").id}
         request_post_delete = RequestFactory().post('/', data)
         
-        # attempt to write down  (5->3) and fail
+        ######
+        # WRITE TEST
+        #  1. Write down (not allowed)
+        #  2. Write up (allowed) 
+        ####
+        
         try:
+            self.assertEqual(len(NewsListing.objects.filter(sources=create_source_key)), 0)
             request_post_create.user = bigshot
-            render = user_account(request_post_create)
+            user_account(request_post_create)
+            # should not have added (5->3) is a write-down
+            self.assertEqual(len(NewsListing.objects.filter(sources=create_source_key)), 0)
+            request_post_create.user = rookie
+            user_account(request_post_create)
+            self.assertEqual(len(NewsListing.objects.filter(sources=create_source_key)), 1)
+            print("Write test passed")
+        except AssertionError:
+            print("Write test failed")
             self.all_passed = False
-            print("Write Test Failed")
-        except Exception as e:
-            print(e)
-            print("Write Test Passed")
-            
+        
+        
+        ####
+        # Update Test
+        #   1. Attempt to update down (not allowed)
+        #   2. Attempt to update same level (allowed)
+        #   3. Attempt to update same level to lower level (not allowed)
+        # 
+        # Attempting to update up is also technically not 
+        # allowed in this lab... but it's just weird enough
+        # that we won't test it here. Satisfied to simply not
+        # post any information (read up)
+        
         # attempt to update at an item at a different security level (5->3)
         try:
-            request_post_update.user = bigshot
-            render = user_account(request_post_update)
-            self.all_passed = False
-            print("Update Test Failed")
-        except Exception as e:
-            print(e)
-            print("Update Test Passed")
+            bcd = NewsListing.objects.get(queryId="bcd")
+            self.assertFalse(bcd.sources == update_source_key_3)
+            request_post_update_3.user = bigshot
+            render = user_account(request_post_update_3)
+            bcd = NewsListing.objects.get(queryId="bcd")
+            self.assertFalse(bcd.sources == update_source_key_3)
             
-        # attempt to update the security level of an item to be lower (5->1)
-        try:
-            request_post_update2.user = bigshot
-            render = user_account(request_post_update2)
-            self.all_passed = False
-            print("Update Test Failed")
-        except Exception as e:
-            print(e)
-            print("Update Test Passed")
+            bcd = NewsListing.objects.get(queryId="abc")
+            self.assertFalse(bcd.sources == update_source_key_5)
+            request_post_update_5.user = bigshot
+            render = user_account(request_post_update_5)
+            bcd = NewsListing.objects.get(queryId="abc")
+            self.assertTrue(bcd.sources == update_source_key_5)
             
+            bcd = NewsListing.objects.get(queryId="abc")
+            self.assertEqual(bcd.secrecy, 5)
+            request_post_update_5_to_3.user = bigshot
+            render = user_account(request_post_update_5_to_3)
+            bcd = NewsListing.objects.get(queryId="abc")
+            self.assertTrue(bcd.secrecy, 5)
+            print("Update Test Passed")
+        except AssertionError:
+            print("Update test failed")
+            self.all_passed = False
+            
+        
+        ####
+        # DELETE TEST
+        # 1. Attempt to delete a lower secrecy item (not allowed)
+        # 2. Attempt to delete an item at the same level (allowed)
+        ###
         # attempt to delete at a different security level (5->3) and fail
         try:
+            self.assertEqual(len(NewsListing.objects.filter(queryId="bcd")), 1)
             request_post_delete.user = bigshot
             render = user_account(request_post_delete)
-            self.all_passed = False
-            print("Delete Test Failed")
-        except Exception as e:
-            print(e)
+            self.assertEqual(len(NewsListing.objects.filter(queryId="bcd")), 1)
+            
+            NewsListing.objects.create(queryId="to_delete", query="Delete Secret", sources="", secrecy=5,lastuser="")
+            
+            data = {'update_delete': 'news', 'update_news_select': NewsListing.objects.get(queryId="to_delete").id}
+            request_post_delete_ok = RequestFactory().post('/', data)
+            
+            self.assertEqual(len(NewsListing.objects.filter(queryId="to_delete")), 1)
+            request_post_delete_ok.user = bigshot
+            render = user_account(request_post_delete_ok)
+            self.assertEqual(len(NewsListing.objects.filter(queryId="to_delete")), 0)
+            
             print("Delete Test Passed")
+        except AssertionError:
+            print("Delete test failed")
+            self.all_passed = False
