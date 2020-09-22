@@ -63,7 +63,7 @@ class CrackerTestCase(TestCase):
             kdf = PBKDF2HMAC(
                     algorithm=hashes.SHA256(),
                     length=16,
-                    salt=salt,
+                    salt=salt.encode(),
                     iterations=1,
                     )
             key_hash = kdf.derive(pw.encode())
@@ -108,12 +108,12 @@ class CrackerTestCase(TestCase):
             kdf = PBKDF2HMAC(
                 algorithm=hashes.SHA256(),
                 length=16,
-                salt=salt,
+                salt=salt.encode(),
                 iterations=1,
                 )
             key_hash = kdf.derive(pw.encode())
-            hash = "pbkdf2_sha256$1${}${}".format(salt, base64.b64encode(key_hash).decode()
-            output = subprocess.check_output("python3 cracker.py {}".format(hash), shell=True)
+            hash = "pbkdf2_sha256$1${}${}".format(salt, base64.b64encode(key_hash).decode())
+            output = subprocess.check_output("python3 cracker.py '{}'".format(hash), shell=True)
             output = output.decode()
             output = output.lower()
             passed = False
