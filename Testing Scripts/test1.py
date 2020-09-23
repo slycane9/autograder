@@ -66,7 +66,7 @@ class CrackerTestCase(TestCase):
             salt = random_word(string.ascii_letters+string.digits, 12)
             kdf = PBKDF2HMAC(
                     algorithm=hashes.SHA256(),
-                    length=16,
+                    length=32,
                     salt=salt.encode(),
                     iterations=1,
                     )
@@ -109,7 +109,7 @@ class CrackerTestCase(TestCase):
             salt = random_word(string.ascii_letters+string.digits, 12)
             kdf = PBKDF2HMAC(
                 algorithm=hashes.SHA256(),
-                length=16,
+                length=32,
                 salt=salt.encode(),
                 iterations=1,
                 )
