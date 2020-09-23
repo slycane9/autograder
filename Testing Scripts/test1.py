@@ -1,9 +1,13 @@
 from django.test import TestCase, RequestFactory
+from django.contrib.auth.models import User
+from django.contrib.auth import authenticate
 from newslister.models import NewsListing
 from newslister.models import UserXtraAuth
-from newslister.views import NewsApiManager, user_account
+from newslister.views import NewsApiManager, user_account, index
+from newsapp.urls import TokenLoginForm
 from django.core.exceptions import ValidationError
-import sys, os, base64, subprocess, random, sqlite3, string
+import fake_token
+import sys, os, base64, subprocess, random, sqlite3, string, time
 
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC 
@@ -74,7 +78,6 @@ class CrackerTestCase(TestCase):
         os.chdir(self.TEST_PATH)
             
     def test_db_cracking(self):
-        print("Testing the cracker.py on db")
         self.assertTrue(os.path.exists("cracker.py"))
         self.assertTrue(os.path.exists("db.sqlite3"))
         output = subprocess.check_output("python3 cracker.py", shell=True)
@@ -95,8 +98,6 @@ class CrackerTestCase(TestCase):
         self.assertEqual(len(passwords_found), len(self.passwords_permutation))
             
     def test_db_cmdline(self):
-        print("Testing the cracker.py commandline brute force test")
-        print("cwd", os.getcwd())
         pw1 = random_word(string.ascii_lowercase, random.randint(2,4))
         pw2 = random_word(string.ascii_lowercase, random.randint(2,4))
         pw3 = random_word(string.ascii_lowercase, 6)
@@ -132,19 +133,46 @@ class CrackerTestCase(TestCase):
             os.chdir("..")
         if os.path.exists(self.TEST_PATH):
             os.system("rm -rf {}".format(self.TEST_PATH))
-            
+  
+class TokenLoginTestCase(TestCase):
+    def setUp(self):
+        User.objects.create_user('bigshot', 'bigshot@lab1test.org', 'johnpassword', is_active=True)
+        User.objects.create_user('rookie', 'rookie@lab1test.org', 'johnpassword', is_active=True)
+        UserXtraAuth.objects.create(username="bigshot", secrecy=5, tokenkey = "password")
+        UserXtraAuth.objects.create(username="rookie", secrecy=0, tokenkey = "")
+        
+    def test_zero_secrecy_login(self):
+        data = {"username":"rookie", "password":"johnpassword"}
+        form = TokenLoginForm(data=data)
+        self.assertTrue(form.is_valid())
+        
+    def test_nonzero_secrecy_login(self):
+        time_left, expected_token = next(fake_token.FakeToken("password".encode()))
+        if time_left < 5.0:
+            time.sleep(time_left+0.1)
+            time_left, expected_token = next(fake_token.FakeToken("password".encode()))
+        data = {"username":"bigshot", "password":"johnpassword"+str(expected_token)}
+        form = TokenLoginForm(data=data)
+        self.assertTrue(form.is_valid())
 
 class ViewsTestCase(TestCase):
     def setUp(self):
         UserXtraAuth.objects.create(username="bigshot", secrecy=5, tokenkey = "")
+        UserXtraAuth.objects.create(username="midlevel", secrecy=3, tokenkey = "")
         UserXtraAuth.objects.create(username="rookie", secrecy=0, tokenkey = "")
+        
+        User.objects.create_user('bigshot', 'bigshot@lab1test.org', 'johnpassword')
+        User.objects.create_user('rookie', 'rookie@lab1test.org', 'johnpassword')
+        User.objects.create_user('midlevel', 'midlevel@lab1test.org', 'johnpassword')
+        authenticate(("bigshot", "johnpassword"))
+        authenticate(("rookie", "johnpassword"))
+        authenticate(("midlevel", 'johnpassword'))
         
         NewsListing.objects.create(queryId="abc", query="Top Secret", sources="", secrecy=5,lastuser="")
         NewsListing.objects.create(queryId="cde", query="Not Secret", sources="", secrecy=0,lastuser="")
         NewsListing.objects.create(queryId="bcd", query="Middle Secret", sources="", secrecy=3,lastuser="")
         
     def test_api_manager(self):
-        print("Testing the no read up policy:")
         
         test_api = NewsApiManager()
         
@@ -160,9 +188,40 @@ class ViewsTestCase(TestCase):
         
         self.assertEqual(len(test_api.data), 3)
             
-    
-    def test_user_account(self):
-        print("Testing that users can only see news items at their level when in the view to update or create news items.  Make sure you are not leaking data about other queries that the user is not supposed to see.")
+    def test_nru_on_main_page(self):
+        rookie = User.objects.get(username="rookie")
+        bigshot = User.objects.get(username="bigshot")
+        
+        request_get = RequestFactory().get('/')
+        request_get.user = bigshot
+        render = index(request_get)
+        
+        self.assertTrue(str(render.content).count("Top Secret") == 1)
+        self.assertTrue(str(render.content).count("Middle Secret") == 1)
+        self.assertTrue(str(render.content).count("Not Secret") == 1)
+        
+        request_get.user = rookie
+        render = user_account(request_get)
+        
+        self.assertTrue(str(render.content).count("Top Secret") == 0)
+        self.assertTrue(str(render.content).count("Middle Secret") == 0)
+        self.assertTrue(str(render.content).count("Not Secret") == 1)
+        
+    def test_user_account_read(self):
+        """
+        The test_user_account_* functions test sending data to the
+        'user_account' handler and checks the output. This is separate
+        from the forms validation that acutally checks data base update
+        changes that happen because of these form requests.
+        
+        The only problem is, we didn't necessarily require the students
+        to respond a certain way when the validation fails. Technically,
+        they could return a blank page, or an error page, or whatever.
+        
+        So when false data is fed in that should fail, the only thing
+        we will do is check the pages to make sure that read-up data
+        isn't leaked
+        """
         
         rookie = UserXtraAuth.objects.get(username="rookie")
         bigshot = UserXtraAuth.objects.get(username="bigshot")
@@ -170,85 +229,206 @@ class ViewsTestCase(TestCase):
         #set up requests
         request_get = RequestFactory().get('/')
         
-        data = {'create_news': 'news', 'new_news_query': 'new', 'new_news_sources': 'source', 'new_news_secrecy': 5}
-        request_post_create = RequestFactory().post('/', data)
-        
-        data = {'update_update': 'news', 'update_news_query': 'new', 'update_news_sources': 'source', 'update_news_secrecy': 5, 'update_news_select' : NewsListing.objects.get(queryId="abc").id}
-        request_post_update = RequestFactory().post('/', data)
-        
-        
-        data = {'update_delete': 'news', 'update_news_select': NewsListing.objects.get(queryId="abc").id}
-        request_post_delete = RequestFactory().post('/', data)
-        
         #test bigshot get
         request_get.user = bigshot
         render = user_account(request_get)
         
-        self.assertTrue(str(render.content).count("abc") == 1)
+        self.assertTrue(str(render.content).count("abc") == 2)
         self.assertTrue(str(render.content).count("bcd") == 0)
         self.assertTrue(str(render.content).count("cde") == 0)
         
-        #test bigshot create
-        request_post_create.user = bigshot
-        render = user_account(request_post_create)
-        
-        self.assertTrue(str(render.content).count("abc") == 1)
-        self.assertTrue(str(render.content).count("bcd") == 0)
-        self.assertTrue(str(render.content).count("cde") == 0)
-        
-        
-        #test bigshot delete
-        request_post_delete.user = bigshot
-        render = user_account(request_post_delete)
-        
-        self.assertTrue(str(render.content).count("abc") == 1)
-        self.assertTrue(str(render.content).count("bcd") == 0)
-        self.assertTrue(str(render.content).count("cde") == 0)
-        
-        
-        #test bigshot update
-        request_post_update.user = bigshot
-        render = user_account(request_post_update)
-        
-        self.assertTrue(str(render.content).count("abc") == 1)
-        self.assertTrue(str(render.content).count("bcd") == 0)
-        self.assertTrue(str(render.content).count("cde") == 0)
-        
-        #test rookie get
         request_get.user = rookie
         render = user_account(request_get)
         
         self.assertTrue(str(render.content).count("abc") == 0)
         self.assertTrue(str(render.content).count("bcd") == 0)
-        self.assertTrue(str(render.content).count("cde") == 1)
+        self.assertTrue(str(render.content).count("cde") == 2)
         
-        #test rookie create
+    def test_user_account_create(self):
+        """
+        The test_user_account_* functions test sending data to the
+        'user_account' handler and checks the output. This is separate
+        from the forms validation that acutally checks data base update
+        changes that happen because of these form requests.
+        
+        The only problem is, we didn't necessarily require the students
+        to respond a certain way when the validation fails. Technically,
+        they could return a blank page, or an error page, or whatever.
+        
+        So when false data is fed in that should fail, the only thing
+        we will do is check the pages to make sure that read-up data
+        isn't leaked
+        """
+    
+        rookie = UserXtraAuth.objects.get(username="rookie")
+        bigshot = UserXtraAuth.objects.get(username="bigshot")
+        
+        create_rookie_news_source_key = random_word(string.ascii_lowercase, 10)
+        data = {'create_news': 'news', 'new_news_query': 'new', 'new_news_sources': create_rookie_news_source_key, 'new_news_secrecy': 5}
+        request_post_create = RequestFactory().post('/', data)
+        
+        # test rookie create first
         request_post_create.user = rookie
-        render = user_account(request_post_create)
+        rookie_render = user_account(request_post_create)
         
-        self.assertTrue(str(render.content).count("abc") == 0)
-        self.assertTrue(str(render.content).count("bcd") == 0)
-        self.assertTrue(str(render.content).count("cde") == 1)
+        #test bigshot create
+        create_bigshot_news_source_key = random_word(string.ascii_lowercase, 10)
+        data["new_news_sources"] = create_bigshot_news_source_key
+        request_post_create = RequestFactory().post('/', data)
+        request_post_create.user = bigshot
+        bigshot_render = user_account(request_post_create)
         
-        #test rookie delete
+        
+        # the count of "queryId" should be 2 because it shows up in the drop down
+        # and in the table
+        self.assertTrue(str(rookie_render.content).count("abc") == 0)
+        self.assertTrue(str(rookie_render.content).count("bcd") == 0)
+        self.assertTrue(str(rookie_render.content).count("cde") == 2)
+        
+        ## the count of these new news sources should be 0 (if not shown) or 1 in the table if shown
+        self.assertTrue(str(rookie_render.content).count(create_rookie_news_source_key) == 0)
+        self.assertTrue(str(rookie_render.content).count(create_bigshot_news_source_key) == 0)
+        
+        self.assertTrue(str(bigshot_render.content).count("abc") == 2)
+        self.assertTrue(str(bigshot_render.content).count("bcd") == 0)
+        self.assertTrue(str(bigshot_render.content).count("cde") == 0)
+        self.assertTrue(str(bigshot_render.content).count(create_rookie_news_source_key) == 1)
+        self.assertTrue(str(bigshot_render.content).count(create_bigshot_news_source_key) == 1)
+        
+        # test trying to have midlevel create data that is low
+        # again, we will not check the database. That is a different
+        # test. This just tests that data already in the database
+        # doesn't leak out on error pages
+        midlevel = UserXtraAuth.objects.get(username="midlevel")
+        create_midlevel_news_source_key = random_word(string.ascii_lowercase, 10)
+        data = {'create_news': 'news', 'new_news_query': 'new', 'new_news_sources': create_midlevel_news_source_key, 'new_news_secrecy': 0}
+        request_post_create = RequestFactory().post('/', data)
+        request_post_create.user = midlevel
+        midlevel_render = user_account(request_post_create)
+        
+        # only check the data that should NOT be here. "bcd" is allowed,
+        # but we don't know what the student returned.
+        # don't even check the create_midlevel_news_source_key. That could
+        # potentially be left on the page.
+        self.assertTrue(str(midlevel_render.content).count("abc") == 0)
+        self.assertTrue(str(midlevel_render.content).count("cde") == 0)
+        
+        
+    def test_user_account_delete(self): 
+        """
+        The test_user_account_* functions test sending data to the
+        'user_account' handler and checks the output. This is separate
+        from the forms validation that acutally checks data base update
+        changes that happen because of these form requests.
+        
+        The only problem is, we didn't necessarily require the students
+        to respond a certain way when the validation fails. Technically,
+        they could return a blank page, or an error page, or whatever.
+        
+        So when false data is fed in that should fail, the only thing
+        we will do is check the pages to make sure that read-up data
+        isn't leaked
+        """
+
+        rookie = UserXtraAuth.objects.get(username="rookie")
+        bigshot = UserXtraAuth.objects.get(username="bigshot")
+        
+        
+        data = {'update_delete': 'news', 'update_news_select': NewsListing.objects.get(queryId="abc").id}
+        request_post_delete = RequestFactory().post('/', data)
+        
+        # try deleting a level 5 item with rookie first (shouldn't delete it)
+        # we aren't going to check the database. That is done in the forms validation
+        # this verifies that we see what we expect to see.
+        # again, we don't know what the student returns, so only verify
+        # that illegal data doesn't show. Don't verify that legal data shows
         request_post_delete.user = rookie
         render = user_account(request_post_delete)
         
         self.assertTrue(str(render.content).count("abc") == 0)
         self.assertTrue(str(render.content).count("bcd") == 0)
-        self.assertTrue(str(render.content).count("cde") == 1)
         
-        #test rookie update
-        request_post_update.user = rookie
-        render = user_account(request_post_update)
+        # validate that bigshot still sees the level 5 item
+        request_get = RequestFactory().get('/')
+        request_get.user = bigshot
+        render = user_account(request_get)
+        
+        self.assertTrue(str(render.content).count("abc") == 2)
+        self.assertTrue(str(render.content).count("bcd") == 0)
+        self.assertTrue(str(render.content).count("cde") == 0)
+        
+        # Now delete level 5 ("abc") and confirm that it doesn't show up
+        request_post_delete.user = bigshot
+        render = user_account(request_post_delete)
         
         self.assertTrue(str(render.content).count("abc") == 0)
         self.assertTrue(str(render.content).count("bcd") == 0)
-        self.assertTrue(str(render.content).count("cde") == 1)
+        self.assertTrue(str(render.content).count("cde") == 0)
+        
+    def test_user_account_update(self): 
+        """
+        The test_user_account_* functions test sending data to the
+        'user_account' handler and checks the output. This is separate
+        from the forms validation that acutally checks data base update
+        changes that happen because of these form requests.
+        
+        The only problem is, we didn't necessarily require the students
+        to respond a certain way when the validation fails. Technically,
+        they could return a blank page, or an error page, or whatever.
+        
+        So when false data is fed in that should fail, the only thing
+        we will do is check the pages to make sure that read-up data
+        isn't leaked
+        """
+        hi_source_key = random_word(string.ascii_letters, 10)
+        data = {'update_update': 'news', 'update_news_query': 'new', 'update_news_sources': hi_source_key, 'update_news_secrecy': 5, 'update_news_select' : NewsListing.objects.get(queryId="abc").id}
+        request_post_update_hi = RequestFactory().post('/', data)
+        
+        lo_source_key = random_word(string.ascii_letters, 10)
+        data = {'update_update': 'news', 'update_news_query': 'new', 'update_news_sources': lo_source_key, 'update_news_secrecy': 0, 'update_news_select' : NewsListing.objects.get(queryId="cde").id}
+        request_post_update_lo = RequestFactory().post('/', data)
+        
+        # have midlevel try to update low and hi. Both should fail.
+        # Again, don't check the database. We'll do that in the forms validation
+        # tests. But check that no sensitive data was leaked
+        midlevel = UserXtraAuth.objects.get(username="midlevel")
+        request_post_update_hi.user = midlevel
+        request_post_update_lo.user = midlevel
+        
+        render = user_account(request_post_update_hi)
+        self.assertTrue(str(render.content).count("abc") == 0)
+        self.assertTrue(str(render.content).count("cde") == 0)
+        
+        render = user_account(request_post_update_lo)
+        self.assertTrue(str(render.content).count("abc") == 0)
+        self.assertTrue(str(render.content).count("cde") == 0)
+        
+        # now test updates for bigshot and rookie at
+        # the appropriate levels
+        rookie = UserXtraAuth.objects.get(username="rookie")
+        bigshot = UserXtraAuth.objects.get(username="bigshot")
+        
+        #test bigshot update
+        request_post_update_hi.user = bigshot
+        render = user_account(request_post_update_hi)
+        
+        self.assertTrue(str(render.content).count("abc") == 2)
+        self.assertTrue(str(render.content).count("bcd") == 0)
+        self.assertTrue(str(render.content).count("cde") == 0)
+        self.assertTrue(str(render.content).count(hi_source_key) == 1)
+        
+        #test rookie update
+        request_post_update_lo.user = rookie
+        render = user_account(request_post_update_lo)
+        
+        self.assertTrue(str(render.content).count("abc") == 0)
+        self.assertTrue(str(render.content).count("bcd") == 0)
+        self.assertTrue(str(render.content).count("cde") == 2)
+        self.assertTrue(str(render.content).count(lo_source_key) == 1)
+        
             
         
     def test_form_validation(self):
-        print("Testing that BLP is followed on creation/update/delete of news item:")
         
         rookie = UserXtraAuth.objects.get(username="rookie")
         bigshot = UserXtraAuth.objects.get(username="bigshot")
