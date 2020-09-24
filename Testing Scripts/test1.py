@@ -168,9 +168,9 @@ class ViewsTestCase(TestCase):
         authenticate(("rookie", "johnpassword"))
         authenticate(("midlevel", 'johnpassword'))
         
-        NewsListing.objects.create(queryId="abc", query="Top Secret", sources="", secrecy=5,lastuser="")
-        NewsListing.objects.create(queryId="cde", query="Not Secret", sources="", secrecy=0,lastuser="")
-        NewsListing.objects.create(queryId="bcd", query="Middle Secret", sources="", secrecy=3,lastuser="")
+        NewsListing.objects.create(queryId="gpqnbkekdla", query="Top Secret", sources="", secrecy=5,lastuser="")
+        NewsListing.objects.create(queryId="fjqbgqjengd", query="Not Secret", sources="", secrecy=0,lastuser="")
+        NewsListing.objects.create(queryId="jhpqnkwnsa", query="Middle Secret", sources="", secrecy=3,lastuser="")
         
     def test_api_manager(self):
         
@@ -233,16 +233,16 @@ class ViewsTestCase(TestCase):
         request_get.user = bigshot
         render = user_account(request_get)
         
-        self.assertTrue(str(render.content).count("abc") == 2)
-        self.assertTrue(str(render.content).count("bcd") == 0)
-        self.assertTrue(str(render.content).count("cde") == 0)
+        self.assertTrue(str(render.content).count("gpqnbkekdla") == 2)
+        self.assertTrue(str(render.content).count("jhpqnkwnsa") == 0)
+        self.assertTrue(str(render.content).count("fjqbgqjengd") == 0)
         
         request_get.user = rookie
         render = user_account(request_get)
         
-        self.assertTrue(str(render.content).count("abc") == 0)
-        self.assertTrue(str(render.content).count("bcd") == 0)
-        self.assertTrue(str(render.content).count("cde") == 2)
+        self.assertTrue(str(render.content).count("gpqnbkekdla") == 0)
+        self.assertTrue(str(render.content).count("jhpqnkwnsa") == 0)
+        self.assertTrue(str(render.content).count("fjqbgqjengd") == 2)
         
     def test_user_account_create(self):
         """
@@ -281,17 +281,17 @@ class ViewsTestCase(TestCase):
         
         # the count of "queryId" should be 2 because it shows up in the drop down
         # and in the table
-        self.assertTrue(str(rookie_render.content).count("abc") == 0)
-        self.assertTrue(str(rookie_render.content).count("bcd") == 0)
-        self.assertTrue(str(rookie_render.content).count("cde") == 2)
+        self.assertTrue(str(rookie_render.content).count("gpqnbkekdla") == 0)
+        self.assertTrue(str(rookie_render.content).count("jhpqnkwnsa") == 0)
+        self.assertTrue(str(rookie_render.content).count("fjqbgqjengd") == 2)
         
         ## the count of these new news sources should be 0 (if not shown) or 1 in the table if shown
         self.assertTrue(str(rookie_render.content).count(create_rookie_news_source_key) == 0)
         self.assertTrue(str(rookie_render.content).count(create_bigshot_news_source_key) == 0)
         
-        self.assertTrue(str(bigshot_render.content).count("abc") == 2)
-        self.assertTrue(str(bigshot_render.content).count("bcd") == 0)
-        self.assertTrue(str(bigshot_render.content).count("cde") == 0)
+        self.assertTrue(str(bigshot_render.content).count("gpqnbkekdla") == 2)
+        self.assertTrue(str(bigshot_render.content).count("jhpqnkwnsa") == 0)
+        self.assertTrue(str(bigshot_render.content).count("fjqbgqjengd") == 0)
         self.assertTrue(str(bigshot_render.content).count(create_rookie_news_source_key) == 1)
         self.assertTrue(str(bigshot_render.content).count(create_bigshot_news_source_key) == 1)
         
@@ -306,12 +306,12 @@ class ViewsTestCase(TestCase):
         request_post_create.user = midlevel
         midlevel_render = user_account(request_post_create)
         
-        # only check the data that should NOT be here. "bcd" is allowed,
+        # only check the data that should NOT be here. "jhpqnkwnsa" is allowed,
         # but we don't know what the student returned.
         # don't even check the create_midlevel_news_source_key. That could
         # potentially be left on the page.
-        self.assertTrue(str(midlevel_render.content).count("abc") == 0)
-        self.assertTrue(str(midlevel_render.content).count("cde") == 0)
+        self.assertTrue(str(midlevel_render.content).count("gpqnbkekdla") == 0)
+        self.assertTrue(str(midlevel_render.content).count("fjqbgqjengd") == 0)
         
         
     def test_user_account_delete(self): 
@@ -334,7 +334,7 @@ class ViewsTestCase(TestCase):
         bigshot = UserXtraAuth.objects.get(username="bigshot")
         
         
-        data = {'update_delete': 'news', 'update_news_select': NewsListing.objects.get(queryId="abc").id}
+        data = {'update_delete': 'news', 'update_news_select': NewsListing.objects.get(queryId="gpqnbkekdla").id}
         request_post_delete = RequestFactory().post('/', data)
         
         # try deleting a level 5 item with rookie first (shouldn't delete it)
@@ -345,25 +345,25 @@ class ViewsTestCase(TestCase):
         request_post_delete.user = rookie
         render = user_account(request_post_delete)
         
-        self.assertTrue(str(render.content).count("abc") == 0)
-        self.assertTrue(str(render.content).count("bcd") == 0)
+        self.assertTrue(str(render.content).count("gpqnbkekdla") == 0)
+        self.assertTrue(str(render.content).count("jhpqnkwnsa") == 0)
         
         # validate that bigshot still sees the level 5 item
         request_get = RequestFactory().get('/')
         request_get.user = bigshot
         render = user_account(request_get)
         
-        self.assertTrue(str(render.content).count("abc") == 2)
-        self.assertTrue(str(render.content).count("bcd") == 0)
-        self.assertTrue(str(render.content).count("cde") == 0)
+        self.assertTrue(str(render.content).count("gpqnbkekdla") == 2)
+        self.assertTrue(str(render.content).count("jhpqnkwnsa") == 0)
+        self.assertTrue(str(render.content).count("fjqbgqjengd") == 0)
         
-        # Now delete level 5 ("abc") and confirm that it doesn't show up
+        # Now delete level 5 ("gpqnbkekdla") and confirm that it doesn't show up
         request_post_delete.user = bigshot
         render = user_account(request_post_delete)
         
-        self.assertTrue(str(render.content).count("abc") == 0)
-        self.assertTrue(str(render.content).count("bcd") == 0)
-        self.assertTrue(str(render.content).count("cde") == 0)
+        self.assertTrue(str(render.content).count("gpqnbkekdla") == 0)
+        self.assertTrue(str(render.content).count("jhpqnkwnsa") == 0)
+        self.assertTrue(str(render.content).count("fjqbgqjengd") == 0)
         
     def test_user_account_update(self): 
         """
@@ -381,11 +381,11 @@ class ViewsTestCase(TestCase):
         isn't leaked
         """
         hi_source_key = random_word(string.ascii_letters, 10)
-        data = {'update_update': 'news', 'update_news_query': 'new', 'update_news_sources': hi_source_key, 'update_news_secrecy': 5, 'update_news_select' : NewsListing.objects.get(queryId="abc").id}
+        data = {'update_update': 'news', 'update_news_query': 'new', 'update_news_sources': hi_source_key, 'update_news_secrecy': 5, 'update_news_select' : NewsListing.objects.get(queryId="gpqnbkekdla").id}
         request_post_update_hi = RequestFactory().post('/', data)
         
         lo_source_key = random_word(string.ascii_letters, 10)
-        data = {'update_update': 'news', 'update_news_query': 'new', 'update_news_sources': lo_source_key, 'update_news_secrecy': 0, 'update_news_select' : NewsListing.objects.get(queryId="cde").id}
+        data = {'update_update': 'news', 'update_news_query': 'new', 'update_news_sources': lo_source_key, 'update_news_secrecy': 0, 'update_news_select' : NewsListing.objects.get(queryId="fjqbgqjengd").id}
         request_post_update_lo = RequestFactory().post('/', data)
         
         # have midlevel try to update low and hi. Both should fail.
@@ -396,12 +396,12 @@ class ViewsTestCase(TestCase):
         request_post_update_lo.user = midlevel
         
         render = user_account(request_post_update_hi)
-        self.assertTrue(str(render.content).count("abc") == 0)
-        self.assertTrue(str(render.content).count("cde") == 0)
+        self.assertTrue(str(render.content).count("gpqnbkekdla") == 0)
+        self.assertTrue(str(render.content).count("fjqbgqjengd") == 0)
         
         render = user_account(request_post_update_lo)
-        self.assertTrue(str(render.content).count("abc") == 0)
-        self.assertTrue(str(render.content).count("cde") == 0)
+        self.assertTrue(str(render.content).count("gpqnbkekdla") == 0)
+        self.assertTrue(str(render.content).count("fjqbgqjengd") == 0)
         
         # now test updates for bigshot and rookie at
         # the appropriate levels
@@ -412,18 +412,18 @@ class ViewsTestCase(TestCase):
         request_post_update_hi.user = bigshot
         render = user_account(request_post_update_hi)
         
-        self.assertTrue(str(render.content).count("abc") == 2)
-        self.assertTrue(str(render.content).count("bcd") == 0)
-        self.assertTrue(str(render.content).count("cde") == 0)
+        self.assertTrue(str(render.content).count("gpqnbkekdla") == 2)
+        self.assertTrue(str(render.content).count("jhpqnkwnsa") == 0)
+        self.assertTrue(str(render.content).count("fjqbgqjengd") == 0)
         self.assertTrue(str(render.content).count(hi_source_key) == 1)
         
         #test rookie update
         request_post_update_lo.user = rookie
         render = user_account(request_post_update_lo)
         
-        self.assertTrue(str(render.content).count("abc") == 0)
-        self.assertTrue(str(render.content).count("bcd") == 0)
-        self.assertTrue(str(render.content).count("cde") == 2)
+        self.assertTrue(str(render.content).count("gpqnbkekdla") == 0)
+        self.assertTrue(str(render.content).count("jhpqnkwnsa") == 0)
+        self.assertTrue(str(render.content).count("fjqbgqjengd") == 2)
         self.assertTrue(str(render.content).count(lo_source_key) == 1)
         
             
@@ -440,19 +440,19 @@ class ViewsTestCase(TestCase):
         request_post_create = RequestFactory().post('/', data)
         
         update_source_key_3 = random_word(string.ascii_lowercase, 10)
-        data = {'update_update': 'news', 'update_news_query': 'new', 'update_news_sources': update_source_key_3, 'update_news_secrecy': 3, 'update_news_select' : NewsListing.objects.get(queryId="bcd").id}
+        data = {'update_update': 'news', 'update_news_query': 'new', 'update_news_sources': update_source_key_3, 'update_news_secrecy': 3, 'update_news_select' : NewsListing.objects.get(queryId="jhpqnkwnsa").id}
         request_post_update_3 = RequestFactory().post('/', data)
         
         update_source_key_5 = random_word(string.ascii_lowercase, 10)
-        data = {'update_update': 'news', 'update_news_query': 'new', 'update_news_sources': update_source_key_5, 'update_news_secrecy': 5, 'update_news_select' : NewsListing.objects.get(queryId="abc").id}
+        data = {'update_update': 'news', 'update_news_query': 'new', 'update_news_sources': update_source_key_5, 'update_news_secrecy': 5, 'update_news_select' : NewsListing.objects.get(queryId="gpqnbkekdla").id}
         request_post_update_5 = RequestFactory().post('/', data)
         
         update_source_key_5_to_3 = random_word(string.ascii_lowercase, 10)
-        data = {'update_update': 'news', 'update_news_query': 'new', 'update_news_sources': update_source_key_5_to_3, 'update_news_secrecy': 3, 'update_news_select' : NewsListing.objects.get(queryId="abc").id}
+        data = {'update_update': 'news', 'update_news_query': 'new', 'update_news_sources': update_source_key_5_to_3, 'update_news_secrecy': 3, 'update_news_select' : NewsListing.objects.get(queryId="gpqnbkekdla").id}
         request_post_update_5_to_3 = RequestFactory().post('/', data)
         
         
-        data = {'update_delete': 'news', 'update_news_select': NewsListing.objects.get(queryId="bcd").id}
+        data = {'update_delete': 'news', 'update_news_select': NewsListing.objects.get(queryId="jhpqnkwnsa").id}
         request_post_delete = RequestFactory().post('/', data)
         
         ######
@@ -485,25 +485,25 @@ class ViewsTestCase(TestCase):
         # post any information (read up)
         
         # attempt to update at an item at a different security level (5->3)
-        bcd = NewsListing.objects.get(queryId="bcd")
+        bcd = NewsListing.objects.get(queryId="jhpqnkwnsa")
         self.assertFalse(bcd.sources == update_source_key_3)
         request_post_update_3.user = bigshot
         render = user_account(request_post_update_3)
-        bcd = NewsListing.objects.get(queryId="bcd")
+        bcd = NewsListing.objects.get(queryId="jhpqnkwnsa")
         self.assertFalse(bcd.sources == update_source_key_3)
         
-        bcd = NewsListing.objects.get(queryId="abc")
+        bcd = NewsListing.objects.get(queryId="gpqnbkekdla")
         self.assertFalse(bcd.sources == update_source_key_5)
         request_post_update_5.user = bigshot
         render = user_account(request_post_update_5)
-        bcd = NewsListing.objects.get(queryId="abc")
+        bcd = NewsListing.objects.get(queryId="gpqnbkekdla")
         self.assertTrue(bcd.sources == update_source_key_5)
         
-        bcd = NewsListing.objects.get(queryId="abc")
+        bcd = NewsListing.objects.get(queryId="gpqnbkekdla")
         self.assertEqual(bcd.secrecy, 5)
         request_post_update_5_to_3.user = bigshot
         render = user_account(request_post_update_5_to_3)
-        bcd = NewsListing.objects.get(queryId="abc")
+        bcd = NewsListing.objects.get(queryId="gpqnbkekdla")
         self.assertTrue(bcd.secrecy, 5)
             
         
@@ -514,10 +514,10 @@ class ViewsTestCase(TestCase):
         ###
         # attempt to delete at a different security level (5->3) and fail
         
-        self.assertEqual(len(NewsListing.objects.filter(queryId="bcd")), 1)
+        self.assertEqual(len(NewsListing.objects.filter(queryId="jhpqnkwnsa")), 1)
         request_post_delete.user = bigshot
         render = user_account(request_post_delete)
-        self.assertEqual(len(NewsListing.objects.filter(queryId="bcd")), 1)
+        self.assertEqual(len(NewsListing.objects.filter(queryId="jhpqnkwnsa")), 1)
         
         NewsListing.objects.create(queryId="to_delete", query="Delete Secret", sources="", secrecy=5,lastuser="")
         
