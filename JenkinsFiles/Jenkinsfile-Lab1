@@ -31,12 +31,13 @@ pipeline {
                 script{
                     try{
                         withEnv(['PATH+JENKINSHOME=/u/srolo/.local/bin']) {
-                            sh '''
+                            sh '''#!/bin/bash
                             cd newsapp
                             pipenv install django
                             pipenv run pip install newsapi-python
                             pipenv run pip install cryptography
                             pipenv run python generate_secret.py
+                            pipenv run python manage.py migrate --run-syncdb
                             pipenv run python manage.py test
                             ls
                             '''
