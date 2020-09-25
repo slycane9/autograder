@@ -1,5 +1,8 @@
 # Autograder Steup Instructions
-This guide will detail how to set up your github repo for the autograder.  You will not need to invite me to your github repo for the grader to work properly.
+This guide will detail how to set up your github repo for the autograder.  You will need to invite me (@slycane9) to your github repo for the grader to work properly.
+
+Here is a link to the google sheets file where you can put your github repo and your name:
+https://docs.google.com/spreadsheets/d/1Z6nc8QDHd4FtZNdhCr0m63m6mj_1eHoAM14bajcj480/edit?usp=sharing
 
 ## Github Webhooks
 **Do not do this step at the moment.  I will message on slack when I have everyone's grader set up, then do this step.**
