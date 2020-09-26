@@ -7,9 +7,17 @@ pipeline {
     stages {
         stage('Build') { 
             steps { 
-                sh 'echo copying tests to git repo' 
-                sh 'rm newsapp/newslister/test*.py'
-                sh 'cp /u/srolo/netsec-tests/test1.py /u/srolo/.jenkins/workspace/testpipe/newsapp/newslister/test.py'
+                 script{
+                    try{
+                        sh 'echo copying tests to git repo' 
+                        sh 'rm newsapp/newslister/test*.py'
+                        sh 'rm newsapp/test*.py'
+                        sh 'rm newsapp/newsapp/test*.py'
+                        sh 'cp /u/srolo/netsec-tests/test1.py /u/srolo/.jenkins/workspace/testpipe/newsapp/newslister/test.py'
+                    }
+                     catch(err){}
+                 }
+                
             }
         }
         
