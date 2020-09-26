@@ -7,9 +7,11 @@ pipeline {
     stages {
         stage('Build') { 
             steps { 
-                sh 'pwd'
-                sh 'echo copying tests to git repo' 
-                sh 'cp /u/srolo/netsec-tests/test1.py /u/srolo/.jenkins/workspace/Firstname_Lastname/newsapp/newslister/tests.py'
+                sh '''#!/bin/bash
+                pwd
+                echo copying tests to git repo
+                cp /u/srolo/netsec-tests/test1.py $(pwd)/newsapp/newslister/tests.py
+                '''
             }
         }
         
@@ -21,12 +23,13 @@ pipeline {
                         echo "Submission mode activated"}
                     catch(err){
                         echo "Submission mode not activated"
-                        currentBuild.result = 'FAILURE' }
+                        currentBuild.result = 'ABORTED' }
                 }
             }
         }
         
         stage('Test'){
+            when {expression{currentBuild.result != 'ABORTED'}}
             steps {
                 sh 'echo test phase'
                 script{
@@ -45,13 +48,13 @@ pipeline {
                         }
                         sh 'cat newsapp/result.txt'
                         sh '''#!/bin/bash
-                        mail -s "Lab 1 Test Passed" <put email here> < newsapp/result.txt
+                        mail -s "Lab 1 Test Passed" <put your email here> < newsapp/result.txt
                         '''
                     }
                     catch(err){
                         currentBuild.result = 'FAILURE'
                         sh '''#!/bin/bash
-                        mail -s "Lab 1 Test Failed" <put email here> < newsapp/result.txt
+                        mail -s "Lab 1 Test Failed" <put your email here> < newsapp/result.txt
                         '''
                     }
                 }
