@@ -11,17 +11,22 @@ For the autograder to detect your git push, go to your github repo's settings>we
 
 Set the url to https://smee.io/beguEj0YpuDKLg5x, and make sure the content type is application/json.  At the bottom make sure to check the button saying "Send me everything".
 
-## Jenkinsfile
+## Jenkinsfile and Repo Configurations
 The next step of your setup will be adding a Jenkinsfile to your repos root directory.  Copy the file contained in this repo for lab 1 and make sure it is named "Jenkinsfile" and is located in the root directory of your repo.
 
-Edit your file's contents so that the email address you want your results to be sent to are in the sections labeled "put your email address here".
+You will have to make two modifications to your Jenkinsfile:
+
+First, edit your file's contents so that the email address you want your results to be sent to are in the sections labeled "put your email address here".
+
+Second, at the top of the script put your full name in the format given where it says "Firstname_Lastname" on line 12 of the file.  If you gave me your middle name in the googlesheets file, do Firstname_Middlename_Lastname
 
 **For the grader to work, your newsapp directory (the one that contains your manage.py file) should be accesible from your repo's root directory (Just like my Jenkinsfiles directory is accesible in this repos root directory)**
+
+**If you include any test*.py files, django will run them along with the official test files I drop in your repo.  If you don't want your build to fail make sure when the pipeline runs your test file that your code passes them.  If you still want to have tests.py in your newslister folder that is ok because my script replaces that file with the official testing file.**
 
 ## Submitting your Lab
 Finally, the grader will not run unless you have a file named "submit.txt" in your repo's root directory.  The content of this file does not matter it just needs to exist.
 
 ## Extra Notes
-If you include the given testing script (test1.py) in your repo files, it will be run if my pipeline can't find it in the newsapp, newsapp/newsapp, or newsapp/newslister directory.  If you don't want it to get run and potentially fail your build, don't include it anywhere else but those locations.
 
 Fortunately once this is all setup for lab1, you wont have to do anything for any other labs except swap to the correct Jenkinsfile (that I will provide as the labs come out).
