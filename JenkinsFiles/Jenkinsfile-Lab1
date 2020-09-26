@@ -8,6 +8,7 @@ pipeline {
         stage('Build') { 
             steps { 
                 sh 'echo copying tests to git repo' 
+                sh 'rm newsapp/newslister/test*.py'
                 sh 'cp /u/srolo/netsec-tests/test1.py /u/srolo/.jenkins/workspace/testpipe/newsapp/newslister/test.py'
             }
         }
@@ -44,13 +45,13 @@ pipeline {
                         }
                         sh 'cat newsapp/result.txt'
                         sh '''#!/bin/bash
-                        mail -s "Lab 1 Test Passed" <put your email address here> < newsapp/result.txt
+                        mail -s "Lab 1 Test Passed" <put your email here> < newsapp/result.txt
                         '''
                     }
                     catch(err){
                         currentBuild.result = 'FAILURE'
                         sh '''#!/bin/bash
-                        mail -s "Lab 1 Test Failed" <put your email address here> < newsapp/result.txt
+                        mail -s "Lab 1 Test Failed" <put your email here> < newsapp/result.txt
                         '''
                     }
                 }
