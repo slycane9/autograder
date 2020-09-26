@@ -5,7 +5,7 @@ Here is a link to the google sheets file where you should put your github repo a
 https://docs.google.com/spreadsheets/d/1Z6nc8QDHd4FtZNdhCr0m63m6mj_1eHoAM14bajcj480/edit?usp=sharing
 
 ## Github Webhooks
-**There have been bugs where webhooks created before I setup your pipeline have not worked, to be safe wait until your google sheets entry has been marked complete before creating your webhook.  I will mark how far I've gotten in the sheet so you can see if your pipeline is setup.**
+**There have been bugs where webhooks created before I setup your pipeline have not worked, to be safe wait until your google sheets entry has been marked complete before creating your webhook.  I will mark how far I've gotten in the sheet so you can see if your pipeline is setup.  You can still set up the other steps before I've created your pipeline.**
 
 For the autograder to detect your git push, go to your github repo's settings>webhooks page and add a webhook.
 
@@ -14,15 +14,11 @@ Set the url to https://smee.io/beguEj0YpuDKLg5x, and make sure the content type 
 ## Jenkinsfile and Repo Configurations
 The next step of your setup will be adding a Jenkinsfile to your repos root directory.  Copy the file contained in this repo for lab 1 and make sure it is named "Jenkinsfile" and is located in the root directory of your repo.
 
-You will have to make two modifications to your Jenkinsfile:
-
-First, edit your file's contents so that the email address you want your results to be sent to are in the sections labeled "put your email address here".
-
-Second, at the top of the script put your full name in the format given where it says "Firstname_Lastname" on line 12 of the file.  If you gave me your middle name in the googlesheets file, do Firstname_Middlename_Lastname
+Make sure to edit your jenkinsfile's contents so that the email address you want your results to be sent to are in the sections labeled "put your email address here".
 
 **For the grader to work, your newsapp directory (the one that contains your manage.py file) should be accesible from your repo's root directory (Just like my Jenkinsfiles directory is accesible in this repos root directory)**
 
-**If you include any test*.py files, django will run them along with the official test files I drop in your repo.  If you don't want your build to fail make sure when the pipeline runs your test file that your code passes them.  If you still want to have tests.py in your newslister folder that is ok because my script replaces that file with the official testing file.**
+**If you include any test*.py files, django will run them along with the official test files I drop in your repo.  If you don't want your build to fail make sure when the pipeline runs your test file that your code passes them.  If you still want to have "tests.py" in your "newslister" folder that is ok because my script replaces that file with the official testing file.**
 
 ## Submitting your Lab
 Finally, the grader will not run unless you have a file named "submit.txt" in your repo's root directory.  The content of this file does not matter it just needs to exist.
