@@ -1,9 +1,5 @@
 pipeline { 
     agent any 
-    options {
-        skipStagesAfterUnstable()
-    }
-    
     stages {
         stage('Build') { 
             steps { 
@@ -42,17 +38,20 @@ pipeline {
                             pipenv run pip install cryptography
                             pipenv run python generate_secret.py
                             pipenv run python manage.py migrate --run-syncdb
-                            pipenv run python manage.py test
+                            pipenv run python manage.py test || exit -1
                             ls
                             '''
+                            
                         }
+                        currentBuild.result = 'SUCCESS'
                         sh 'cat newsapp/result.txt'
                         sh '''#!/bin/bash
                         mail -s "Lab 1 Test Passed" <put your email here> < newsapp/result.txt
                         '''
                     }
-                    catch(err){
+                    catch(Exception e){
                         currentBuild.result = 'FAILURE'
+                        sh 'cat newsapp/result.txt'
                         sh '''#!/bin/bash
                         mail -s "Lab 1 Test Failed" <put your email here> < newsapp/result.txt
                         '''
