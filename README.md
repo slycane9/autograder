@@ -37,4 +37,4 @@ Extra test.py file in repo that causes two test suites to be run (22 tests) and 
 
 Python 3.8 required in pipfile, change it to 3.6
 
-Make sure you have the most current Jenkinsfile in your repo with submit.txt, and make sure you spell "Jenkinsfile" correctly.
+Make sure you have the most current Jenkinsfile in your repo with submit.txt, and make sure you it named exactly "Jenkinsfile" without the lab 1 appended to the name.
