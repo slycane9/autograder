@@ -30,3 +30,9 @@ Finally, the grader will not run unless you have a file named "submit.txt" in yo
 ## Extra Notes
 
 Fortunately once this is all setup for lab1, you wont have to do anything for any other labs except swap to the correct Jenkinsfile (that I will provide as the labs come out).
+
+## Common Bugs
+
+Extra test.py file in repo that causes two test suites to be run (22 tests) and fail the nru test.  Make sure your local test file is in newslister/tests.py
+
+Python 3.8 required in pipfile, change it to 3.6
