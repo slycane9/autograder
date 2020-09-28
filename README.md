@@ -36,3 +36,5 @@ Fortunately once this is all setup for lab1, you wont have to do anything for an
 Extra test.py file in repo that causes two test suites to be run (22 tests) and fail the nru test.  Make sure your local test file is in newslister/tests.py
 
 Python 3.8 required in pipfile, change it to 3.6
+
+Make sure you have the most current Jenkinsfile in your repo with submit.txt, and make sure you spell "Jenkinsfile" correctly.
