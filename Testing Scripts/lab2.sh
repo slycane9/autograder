@@ -15,7 +15,10 @@ pkill openssl
 if grep "SSL handshake has read 0 bytes" out.txt
 then
    echo "Test Failed: No connection made"
-elif grep -x "Verification: OK" out.txt
+elif grep "Verification: OK" out.txt
+then
+   echo "Test Passed"
+elif grep "Verify return code: 0 (ok)" out.txt
 then
    echo "Test Passed"
 else
